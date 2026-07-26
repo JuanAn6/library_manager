@@ -1,0 +1,63 @@
+<section class="books">
+  <h2>Books</h2>
+
+  <!-- @if / @else is Angular's control flow: shows one block at a time -->
+  @if (loading()) {
+    <p>Loading books…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <p>Total books: <strong>{{ books().length }}</strong></p>
+
+    <!-- @for repeats the <li> once per book. "track book.id" helps Angular
+         know which item is which (needed for good performance). -->
+    <table>
+      <thead>
+        <tr>
+          <th>Published date</th>
+          <th>Title</th>
+          <th>Author</th>
+          <th>ISBN</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (book of books(); track book.id) {
+          <tr>
+            <td>{{ book.publishedDate }}</td>
+            <td>{{ book.title }}</td>
+            <td>{{ book.authors[0].firstName }}</td>
+            <td>{{ book.isbn }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="2">No hay libros.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  th,
+  td {
+    padding: 5px 16px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+  }
+
+  tbody tr:hover {
+    background-color: #f9f9f9;
+  }
+</style>

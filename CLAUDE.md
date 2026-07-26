@@ -9,3 +9,4 @@ Guidance for working in this repository.
   messages, and any other identifiers or documentation embedded in the code.
 - User-facing content (API response messages, UI text) may be localized as needed,
   but everything else in the codebase stays in English.
+- User-interface all text must be in english.
