@@ -1,10 +1,11 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { BookService } from '../book.service';
 import { Book } from '../book';
 
 @Component({
   selector: 'app-book-list',
-  imports: [],
+  imports: [RouterLink], // needed because the template uses [routerLink]
   templateUrl: './book-list.html',
   styleUrl: './book-list.css',
 })

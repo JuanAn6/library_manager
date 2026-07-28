@@ -1,0 +1,100 @@
+<section class="book-edit">
+  <!-- Same three-state pattern as the list: loading / error / content -->
+  @if (loading()) {
+    <p>Loading book…</p>
+  } @else if (book(); as b) {
+    <h2>Edit: {{ b.title }}</h2>
+
+    <!-- [formGroup] connects this <form> to the "form" property of the class.
+         (ngSubmit) fires on submit (button click or Enter). We use it instead
+         of (click) so keyboard users get the same behaviour. -->
+    <form [formGroup]="form" (ngSubmit)="save()" class="main-form">
+      <!-- formControlName="title" links this input to the control named
+           "title". Two-way from then on: typing updates the control,
+           patchValue updates the input. -->
+      <label>
+        <span>Title</span>
+        <input type="text" formControlName="title" />
+        <!-- Errors are shown only once the user touched the field, so a
+             pristine form does not open covered in red. -->
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <small class="field-error">Title is required.</small>
+        }
+      </label>
+
+      <label>
+        <span>ISBN</span>
+        <input type="text" formControlName="isbn" />
+      </label>
+
+      <label>
+        <span>Published date</span>
+        <!-- type="date" expects the exact "YYYY-MM-DD" format the API sends,
+             so the value maps across with no conversion. -->
+        <input type="date" formControlName="publishedDate" />
+      </label>
+
+      <label>
+        <span>Language</span>
+        <input type="text" formControlName="language" />
+      </label>
+
+      <label>
+        <span>Pages</span>
+        <input type="number" min="0" formControlName="pageCount" />
+      </label>
+
+      <label>
+        <span>Location</span>
+        <input type="text" formControlName="location" />
+      </label>
+
+      <label>
+        <span>Total copies</span>
+        <input type="number" min="0" formControlName="totalCopies" />
+      </label>
+
+      <label>
+        <span>Available copies</span>
+        <span>{{b.availableCopies}}</span>
+        <!-- <input type="number" min="0" formControlName="availableCopies" /> -->
+      </label>
+
+      <label class="full">
+        <span>Description</span>
+        <textarea rows="5" formControlName="description"></textarea>
+      </label>
+
+      <!-- Authors, category and publisher are relations to other entities.
+           They are shown read-only for now: editing them needs dropdowns fed
+           by /api/authors, /api/categories and /api/publishers. -->
+      <div class="readonly full">
+        <p>
+          <strong>Authors:</strong>
+          @for (author of b.authors; track author.id) {
+            <span>{{ author.firstName }} {{ author.lastName }}</span>
+          } @empty {
+            <span>Unknown</span>
+          }
+        </p>
+        <p><strong>Category:</strong> {{ b.category?.name || '—' }}</p>
+        <p><strong>Publisher:</strong> {{ b.publisher?.name || '—' }}</p>
+      </div>
+
+      @if (error()) {
+        <p class="error full">{{ error() }}</p>
+      }
+
+      <div class="actions full">
+        <button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <a [routerLink]="['/books', b.id]">Cancel</a>
+      </div>
+    </form>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <p><a routerLink="/books">← Back to the list</a></p>
+</section>

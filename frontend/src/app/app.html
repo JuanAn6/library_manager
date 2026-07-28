@@ -25,8 +25,12 @@
     </p>
   </section>
 
-  <!-- Our books component. Its own logic loads data from the API. -->
-  <app-book-list></app-book-list>
+  <div class="main-content">
+    <!-- The Router swaps the component shown here depending on the URL:
+        /books        -> <app-book-list>
+        /books/7      -> <app-book-detail> -->
+    <router-outlet></router-outlet>
+  </div>
 
   <footer class="footer">
     <small>{{ title() }} — {{ year }}</small>

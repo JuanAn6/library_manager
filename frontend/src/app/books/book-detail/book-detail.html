@@ -1,1 +1,56 @@
-<p>book-detail works!</p>
+<section class="book-detail">
+  <!-- Same three-state pattern as the list: loading / error / content -->
+  @if (loading()) {
+    <p>Loading book…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (book(); as b) {
+    <!-- "as b" stores the signal value in a local variable, so we don't
+         have to call book() over and over (and TypeScript knows it is not null). -->
+    <h2>{{ b.title }}</h2>
+
+    <dl>
+      <dt>Authors</dt>
+      <dd>
+        @for (author of b.authors; track author.id) {
+          <span>{{ author.firstName }} {{ author.lastName }}</span>
+        } @empty {
+          <span>Unknown</span>
+        }
+      </dd>
+
+      <dt>ISBN</dt>
+      <dd>{{ b.isbn || '—' }}</dd>
+
+      <dt>Published date</dt>
+      <dd>{{ b.publishedDate || '—' }}</dd>
+
+      <dt>Publisher</dt>
+      <dd>{{ b.publisher?.name || '—' }}</dd>
+
+      <dt>Category</dt>
+      <dd>{{ b.category?.name || '—' }}</dd>
+
+      <dt>Language</dt>
+      <dd>{{ b.language || '—' }}</dd>
+
+      <dt>Pages</dt>
+      <dd>{{ b.pageCount || '—' }}</dd>
+
+      <dt>Location</dt>
+      <dd>{{ b.location || '—' }}</dd>
+
+      <dt>Copies</dt>
+      <dd>{{ b.availableCopies }} available of {{ b.totalCopies }}</dd>
+    </dl>
+
+    @if (b.description) {
+      <p class="description">{{ b.description }}</p>
+    }
+
+    <a [routerLink]="['/books/edit', b.id]">Edit</a>
+  }
+
+  <!-- routerLink also works for plain navigation, no parameters needed -->
+  <p><a routerLink="/books">← Back to the list</a></p>
+</section>

@@ -1,9 +1,16 @@
 .page {
-  max-width: 640px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 2rem 1.25rem;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: #1f2933;
+}
+
+.main-content{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 .hero {

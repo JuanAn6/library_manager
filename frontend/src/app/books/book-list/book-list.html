@@ -18,6 +18,7 @@
           <th>Title</th>
           <th>Author</th>
           <th>ISBN</th>
+          <th>Actions</th>
         </tr>
       </thead>
 
@@ -25,13 +26,20 @@
         @for (book of books(); track book.id) {
           <tr>
             <td>{{ book.publishedDate }}</td>
-            <td>{{ book.title }}</td>
-            <td>{{ book.authors[0].firstName }}</td>
+            <td>
+              <!-- routerLink navigates without reloading the page. The array ['/books', book.id] builds the url /books/7 -->
+              <a [routerLink]="['/books', book.id]">{{ book.title }}</a>
+            </td>
+            <td>{{ book.authors[0].firstName }} {{ book.authors[0].lastName }}</td>
             <td>{{ book.isbn }}</td>
+            <td>
+              <!-- routerLink navigates without reloading the page. The array ['/books', book.id] builds the url /books/7 -->
+              <a [routerLink]="['/books/edit', book.id]">Edit</a>
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="2">No hay libros.</td>
+            <td colspan="4">No books found.</td>
           </tr>
         }
       </tbody>
