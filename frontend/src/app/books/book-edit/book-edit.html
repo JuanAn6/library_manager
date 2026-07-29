@@ -65,21 +65,49 @@
         <textarea rows="5" formControlName="description"></textarea>
       </label>
 
-      <!-- Authors, category and publisher are relations to other entities.
-           They are shown read-only for now: editing them needs dropdowns fed
-           by /api/authors, /api/categories and /api/publishers. -->
-      <div class="readonly full">
-        <p>
-          <strong>Authors:</strong>
-          @for (author of b.authors; track author.id) {
-            <span>{{ author.firstName }} {{ author.lastName }}</span>
-          } @empty {
-            <span>Unknown</span>
+      <!-- Authors is a relation to another entity, so the dropdown is fed by
+           /api/authors. "multiple" because a book can have several authors;
+           [ngValue] keeps the option value a real number instead of text. -->
+      <label class="full">
+        <span>Authors</span>
+        <select multiple size="6" formControlName="authorIds">
+          @for (author of authors(); track author.id) {
+            <option [ngValue]="author.id">{{ authorName(author) }}</option>
           }
-        </p>
-        <p><strong>Category:</strong> {{ b.category?.name || '—' }}</p>
-        <p><strong>Publisher:</strong> {{ b.publisher?.name || '—' }}</p>
-      </div>
+        </select>
+        <small class="hint">Hold Ctrl (Cmd on Mac) to select more than one.</small>
+        <small class="selected">
+          Selected:
+          @if (selectedAuthors().length) {
+            {{ selectedAuthors().length }} — {{ selectedAuthorNames() }}
+          } @else {
+            none
+          }
+        </small>
+      </label>
+
+      <!-- Category and publisher are relations too, but a book has at most one
+           of each, so these are single-choice dropdowns. Both are optional in
+           the model, hence the empty "—" option bound to null. -->
+      <label>
+        <span>Category</span>
+        <select formControlName="categoryId">
+          <option [ngValue]="null">—</option>
+          @for (category of categories(); track category.id) {
+            <option [ngValue]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Publisher</span>
+        <select formControlName="publisherId">
+          <option [ngValue]="null">—</option>
+          @for (publisher of publishers(); track publisher.id) {
+            <option [ngValue]="publisher.id">{{ publisher.name }}</option>
+          }
+        </select>
+      </label>
 
       @if (error()) {
         <p class="error full">{{ error() }}</p>

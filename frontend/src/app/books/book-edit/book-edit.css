@@ -24,13 +24,24 @@ label > span {
 }
 
 input,
-textarea {
+textarea,
+select {
   padding: 5px 10px;
   border: 1px solid currentColor;
   border-radius: 4px;
   background: transparent;
   color: inherit;
   font: inherit;
+}
+
+/* A multi-select renders as a list box, so give the options some breathing room */
+select[multiple] option {
+  padding: 2px 4px;
+}
+
+.hint,
+.selected {
+  opacity: 0.7;
 }
 
 textarea {
@@ -52,10 +63,6 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.readonly p {
-  margin: 4px 0;
 }
 
 .field-error,
