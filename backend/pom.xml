@@ -28,6 +28,14 @@
     </scm>
     <properties>
         <java.version>25</java.version>
+
+        <!-- Connection used by the flyway-maven-plugin goals (mvn flyway:*).
+             It runs OUTSIDE the application, so it cannot read
+             application.properties and needs its own copy. Override any of
+             them on the command line, e.g. -Dflyway.url=... -->
+        <flyway.url>jdbc:mysql://localhost:3306/library_manager</flyway.url>
+        <flyway.user>root</flyway.user>
+        <flyway.password></flyway.password>
     </properties>
     <dependencies>
         <dependency>
@@ -37,6 +45,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- Brings the Nimbus JWT encoder/decoder and the resource server
+             filters, so we do not hand-roll token parsing or validation. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
         <dependency>
@@ -88,6 +107,41 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <!-- Runs the migrations on demand: mvn flyway:migrate.
+                 Nothing binds it to a lifecycle phase, so it never fires as a
+                 side effect of compile, test or package. -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <configuration>
+                    <url>${flyway.url}</url>
+                    <user>${flyway.user}</user>
+                    <password>${flyway.password}</password>
+                    <!-- "filesystem:" because the plugin reads the .sql files
+                         from the source tree, not from a built classpath. -->
+                    <locations>
+                        <location>filesystem:src/main/resources/db/migration</location>
+                    </locations>
+                    <!-- Allows mvn flyway:clean to wipe the schema. Handy while
+                         the schema is still moving; see the warning in the
+                         README before pointing this at anything real. -->
+                    <cleanDisabled>false</cleanDisabled>
+                </configuration>
+                <dependencies>
+                    <!-- The plugin has its own classpath: the driver and the
+                         MySQL dialect have to be declared here too. -->
+                    <dependency>
+                        <groupId>com.mysql</groupId>
+                        <artifactId>mysql-connector-j</artifactId>
+                        <version>${mysql.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.flywaydb</groupId>
+                        <artifactId>flyway-mysql</artifactId>
+                        <version>${flyway.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

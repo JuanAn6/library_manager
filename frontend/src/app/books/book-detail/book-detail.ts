@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BookService } from '../book.service';
 import { Book } from '../book';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-book-detail',
@@ -16,6 +17,9 @@ export class BookDetail implements OnInit {
   // ActivatedRoute describes the route that is currently displayed,
   // including its parameters (the ":id" we declared in app.routes.ts).
   private readonly route = inject(ActivatedRoute);
+
+  // Whether the current role may change the catalogue (ADMIN or MANAGER)
+  protected readonly canEdit = inject(AuthService).canEditCatalogue;
 
   // Reactive state the template can read
   protected readonly book = signal<Book | null>(null);

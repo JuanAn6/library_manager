@@ -2,8 +2,10 @@ package com.library.manager.config;
 
 import com.library.manager.model.*;
 import com.library.manager.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -20,23 +22,58 @@ public class DataSeeder implements CommandLineRunner {
     private final PublisherRepository publisherRepository;
     private final MemberRepository memberRepository;
     private final LoanRepository loanRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final String adminUsername;
+    private final String adminPassword;
 
     public DataSeeder(BookRepository bookRepository,
                       AuthorRepository authorRepository,
                       CategoryRepository categoryRepository,
                       PublisherRepository publisherRepository,
                       MemberRepository memberRepository,
-                      LoanRepository loanRepository) {
+                      LoanRepository loanRepository,
+                      UserRepository userRepository,
+                      RoleRepository roleRepository,
+                      PasswordEncoder passwordEncoder,
+                      @Value("${app.seed.admin.username}") String adminUsername,
+                      @Value("${app.seed.admin.password}") String adminPassword) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
         this.categoryRepository = categoryRepository;
         this.publisherRepository = publisherRepository;
         this.memberRepository = memberRepository;
         this.loanRepository = loanRepository;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+    }
+
+    /** Creates the development admin account the first time the app runs. */
+    private void seedAdminUser() {
+        if (userRepository.existsByUsername(adminUsername)) {
+            return;
+        }
+        // The three roles are inserted by the V2 migration, not here.
+        Role adminRole = roleRepository.findByName(Role.Names.ADMIN)
+                .orElseThrow(() -> new IllegalStateException("Role ADMIN is missing from the database"));
+
+        // The password is hashed here and only the hash is stored. This is a
+        // dev-profile convenience; on any real deployment accounts are created
+        // through /api/auth/register.
+        userRepository.save(new User(adminUsername, passwordEncoder.encode(adminPassword), adminRole));
+        System.out.printf("Seeder created the '%s' user%n", adminUsername);
     }
 
     @Override
     public void run(String... args) {
+        // Independent of the catalogue guard below: without an account there is
+        // no way to sign in and see the data that is already there.
+        seedAdminUser();
+
         if (bookRepository.count() > 0) {
             System.out.println("Books already present, seeder skipped");
             return;

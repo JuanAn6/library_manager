@@ -33,8 +33,12 @@
             <td>{{ book.authors[0].firstName }} {{ book.authors[0].lastName }}</td>
             <td>{{ book.isbn }}</td>
             <td>
-              <!-- routerLink navigates without reloading the page. The array ['/books', book.id] builds the url /books/7 -->
-              <a [routerLink]="['/books/edit', book.id]">Edit</a>
+              <!-- Hidden for a MEMBER, whose role only allows reading. This is
+                   cosmetic: the backend answers 403 to the request either way. -->
+              @if (canEdit()) {
+                <!-- routerLink navigates without reloading the page. The array ['/books', book.id] builds the url /books/7 -->
+                <a [routerLink]="['/books/edit', book.id]">Edit</a>
+              }
             </td>
           </tr>
         } @empty {

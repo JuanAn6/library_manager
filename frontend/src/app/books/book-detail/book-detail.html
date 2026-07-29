@@ -48,7 +48,9 @@
       <p class="description">{{ b.description }}</p>
     }
 
-    <a [routerLink]="['/books/edit', b.id]">Edit</a>
+    @if(canEdit()){
+      <a [routerLink]="['/books/edit', b.id]">Edit</a>
+    }
   }
 
   <!-- routerLink also works for plain navigation, no parameters needed -->

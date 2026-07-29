@@ -1,0 +1,43 @@
+<section class="auth">
+  <h2>Create an account</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+    <label>
+      <span>Username</span>
+      <input type="text" formControlName="username" autocomplete="username" />
+      @if (form.controls.username.touched && form.controls.username.invalid) {
+        <small class="field-error">At least 3 characters.</small>
+      }
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input type="password" formControlName="password" autocomplete="new-password" />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <small class="field-error">At least 8 characters.</small>
+      }
+    </label>
+
+    <label>
+      <span>Repeat password</span>
+      <input type="password" formControlName="confirmation" autocomplete="new-password" />
+      <!-- This error lives on the GROUP, not on the control, because it is the
+           comparison between two fields that failed. -->
+      @if (form.controls.confirmation.touched && form.hasError('passwordsMismatch')) {
+        <small class="field-error">The two passwords do not match.</small>
+      }
+    </label>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Creating…' : 'Create account' }}
+    </button>
+  </form>
+
+  <p class="switch">
+    Already have an account? <a routerLink="/login">Sign in</a>
+  </p>
+</section>

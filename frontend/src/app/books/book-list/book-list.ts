@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BookService } from '../book.service';
+import { AuthService } from '../../auth/auth.service';
 import { Book } from '../book';
 
 @Component({
@@ -12,6 +13,9 @@ import { Book } from '../book';
 export class BookList implements OnInit {
   // Ask Angular for the shared BookService instance
   private readonly bookService = inject(BookService);
+
+  // Whether the current role may change the catalogue (ADMIN or MANAGER)
+  protected readonly canEdit = inject(AuthService).canEditCatalogue;
 
   // Reactive state the template can read
   protected readonly books = signal<Book[]>([]);

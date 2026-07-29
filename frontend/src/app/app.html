@@ -1,9 +1,20 @@
 <main class="page">
   <header class="hero">
-    <!-- title() has parentheses because it is a signal -->
-    <h1>📚 {{ title() }}</h1>
-    <!-- tagline is a plain property, so NO parentheses -->
-    <p class="tagline">{{ tagline }}</p>
+    <div>
+      <!-- title() has parentheses because it is a signal -->
+      <h1>📚 {{ title() }}</h1>
+      <!-- tagline is a plain property, so NO parentheses -->
+      <p class="tagline">{{ tagline }}</p>
+    </div>
+
+    <!-- user() comes from AuthService, so this block appears and disappears
+         on its own as soon as someone signs in or out. -->
+    @if (user(); as currentUser) {
+      <div class="session">
+        <span class="username">{{ currentUser.username }}</span>
+        <button type="button" (click)="logout()">Sign out</button>
+      </div>
+    }
   </header>
 
   <section class="card" style="display: none;">
