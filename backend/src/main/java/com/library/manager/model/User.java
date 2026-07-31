@@ -23,6 +23,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 80)
     private String username;
 
+    // Mandatory, and unique like the username: both identify one single account,
+    // which is what lets either of them be used to sign in.
+    @Column(nullable = false, unique = true, length = 180)
+    private String email;
+
     // Never the password itself: only its BCrypt hash. @JsonIgnore makes it
     // impossible to leak it through an API response by accident.
     @Column(name = "password_hash", nullable = false, length = 100)
@@ -44,8 +49,9 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String username, String passwordHash, Role role) {
+    public User(String username, String email, String passwordHash, Role role) {
         this.username = username;
+        this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
     }
@@ -56,6 +62,9 @@ public class User {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }

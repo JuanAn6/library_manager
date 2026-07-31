@@ -1,0 +1,70 @@
+<section class="categories">
+  <header class="heading">
+    <h2>Categories</h2>
+
+    <!-- Hidden for a MEMBER, whose role only allows reading. This is
+         cosmetic: the backend answers 403 to the request either way. -->
+    @if (canEdit()) {
+      <a routerLink="/categories/new">New category</a>
+    }
+  </header>
+
+  <!-- The backend does the filtering (GET /api/categories?name=…), so this is
+       a form and not a live filter over the array we already have: only what
+       the server returns is guaranteed to be the whole match. -->
+  <!-- Plain (submit), not (ngSubmit): this form has no Angular directive on it,
+       so we stop the browser reloading the page ourselves. -->
+  <form class="search" (submit)="$event.preventDefault(); onSearch(term.value)">
+    <label>
+      <span class="visually-hidden">Search by name</span>
+      <input #term type="search" [value]="search()" placeholder="Search by name…" />
+    </label>
+    <button type="submit">Search</button>
+    @if (search()) {
+      <button type="button" (click)="term.value = ''; clearSearch()">Clear</button>
+    }
+  </form>
+
+  <!-- @if / @else is Angular's control flow: shows one block at a time -->
+  @if (loading()) {
+    <p>Loading categories…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <p>Total categories: <strong>{{ categories().length }}</strong></p>
+
+    <!-- @for repeats the <tr> once per category. "track category.id" helps
+         Angular know which item is which (needed for good performance). -->
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (category of categories(); track category.id) {
+          <tr>
+            <td>
+              <!-- routerLink navigates without reloading the page. The array
+                   ['/categories', category.id] builds the url /categories/7 -->
+              <a [routerLink]="['/categories', category.id]">{{ category.name }}</a>
+            </td>
+            <td>{{ category.description || '—' }}</td>
+            <td>
+              @if (canEdit()) {
+                <a [routerLink]="['/categories/edit', category.id]">Edit</a>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3">No categories found.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

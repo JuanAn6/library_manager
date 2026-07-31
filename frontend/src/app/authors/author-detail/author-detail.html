@@ -1,0 +1,37 @@
+<section class="author-detail">
+  <!-- Same three-state pattern as the list: loading / error / content -->
+  @if (loading()) {
+    <p>Loading author…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (author(); as a) {
+    <!-- "as a" stores the signal value in a local variable, so we don't
+         have to call author() over and over (and TypeScript knows it is not null). -->
+    <h2>{{ a.firstName }} {{ a.lastName }}</h2>
+
+    <dl>
+      <dt>First name</dt>
+      <dd>{{ a.firstName }}</dd>
+
+      <dt>Last name</dt>
+      <dd>{{ a.lastName }}</dd>
+
+      <dt>Nationality</dt>
+      <dd>{{ a.nationality || '—' }}</dd>
+
+      <dt>Birth date</dt>
+      <dd>{{ a.birthDate || '—' }}</dd>
+    </dl>
+
+    @if (a.biography) {
+      <p class="biography">{{ a.biography }}</p>
+    }
+
+    @if (canEdit()) {
+      <a [routerLink]="['/authors/edit', a.id]">Edit</a>
+    }
+  }
+
+  <!-- routerLink also works for plain navigation, no parameters needed -->
+  <p><a routerLink="/authors">← Back to the list</a></p>
+</section>

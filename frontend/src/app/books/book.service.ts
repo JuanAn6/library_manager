@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Book } from './book';
 
@@ -13,9 +13,17 @@ export class BookService {
   // Angular gives us (injects) an HttpClient to perform HTTP requests.
   private readonly http = inject(HttpClient);
 
-  // GET /api/books -> the full list of books
-  getBooks(): Observable<Book[]> {
-    return this.http.get<Book[]>(this.apiUrl);
+  /**
+   * GET /api/books -> the full list of books.
+   *
+   * With a title the backend filters instead, matching any part of it and
+   * ignoring capitals. Filtering there rather than in the browser keeps the
+   * list correct once there are more books than one response.
+   */
+  getBooks(title?: string): Observable<Book[]> {
+    // HttpParams builds the query string and escapes the value for us.
+    const params = title ? new HttpParams().set('title', title) : undefined;
+    return this.http.get<Book[]>(this.apiUrl, { params });
   }
 
   // GET /api/books/{id} -> a single book

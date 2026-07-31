@@ -99,6 +99,14 @@ public class SecurityConfig {
                         // as a change to the catalogue and a MEMBER could not
                         // even sign out.
                         .requestMatchers("/api/auth/**").authenticated()
+                        // The accounts themselves are administration, not
+                        // catalogue: even reading the list tells you who exists
+                        // and what they may do, so ADMIN only. Must come before
+                        // the GET rule below, which would otherwise open it to
+                        // every signed-in user.
+                        // /api/roles only exists to fill the role dropdown on
+                        // that same screen, so it follows the same rule.
+                        .requestMatchers("/api/users/**", "/api/roles/**").hasRole(Role.Names.ADMIN)
                         // Reading the catalogue: any signed-in user, MEMBER included
                         .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
                         // Changing it: staff only. A MEMBER borrows books, it

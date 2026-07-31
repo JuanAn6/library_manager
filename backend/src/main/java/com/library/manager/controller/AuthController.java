@@ -5,6 +5,7 @@ import com.library.manager.model.User;
 import com.library.manager.repository.RoleRepository;
 import com.library.manager.repository.UserRepository;
 import com.library.manager.security.JwtCookieService;
+import com.library.manager.validation.EmailRules;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -50,18 +51,32 @@ public class AuthController {
     // --- Request and response bodies ---
     // Records: immutable, and Jackson maps the JSON onto them with no boilerplate.
 
-    public record Credentials(String username, String password) {}
+    /**
+     * What the sign-in form sends. "identifier" rather than "username" because
+     * either the username or the email is accepted; AppUserDetailsService is
+     * what resolves it to an account.
+     */
+    public record Credentials(String identifier, String password) {}
+
+    public record RegistrationRequest(String username, String email, String password) {}
 
     public record UserResponse(String username, String role) {}
 
     // POST /api/auth/register -> creates the account and signs the user in
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody Credentials request) {
+    public ResponseEntity<UserResponse> register(@RequestBody RegistrationRequest request) {
         String username = request.username() == null ? "" : request.username().trim();
+        // Lowercased so "Ana@x.com" and "ana@x.com" cannot become two accounts:
+        // the UNIQUE constraint compares the stored text, and a user typing the
+        // same address with different capitals means the same address.
+        String email = request.email() == null ? "" : request.email().trim().toLowerCase();
         String password = request.password() == null ? "" : request.password();
 
         if (username.length() < 3) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must be at least 3 characters long");
+        }
+        if (!EmailRules.isValid(email)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A valid email address is required");
         }
         if (password.length() < 8) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long");
@@ -69,12 +84,15 @@ public class AuthController {
         if (userRepository.existsByUsername(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "That username is already taken");
         }
+        if (userRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "That email address is already registered");
+        }
 
         Role role = roleRepository.findByName(DEFAULT_ROLE)
                 .orElseThrow(() -> new IllegalStateException("Role " + DEFAULT_ROLE + " is missing from the database"));
 
         // Only the hash is ever stored, never the password itself.
-        userRepository.save(new User(username, passwordEncoder.encode(password), role));
+        userRepository.save(new User(username, email, passwordEncoder.encode(password), role));
 
         // Signing in right away saves the user from typing the credentials
         // twice, and reuses the exact same code path as a normal login.
@@ -82,9 +100,10 @@ public class AuthController {
     }
 
     // POST /api/auth/login -> sets the HttpOnly cookie holding the JWT
+    // The identifier is a username or an email, whichever the user typed.
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login(@RequestBody Credentials request) {
-        return authenticate(request.username(), request.password(), HttpStatus.OK);
+        return authenticate(request.identifier(), request.password(), HttpStatus.OK);
     }
 
     // POST /api/auth/logout -> overwrites the cookie with an expired one
@@ -106,13 +125,14 @@ public class AuthController {
         return new UserResponse(authentication.getName(), jwtCookieService.roleOf(authentication));
     }
 
-    private ResponseEntity<UserResponse> authenticate(String username, String password, HttpStatus status) {
+    private ResponseEntity<UserResponse> authenticate(String identifier, String password, HttpStatus status) {
         Authentication authentication;
         try {
             // Delegates to AppUserDetailsService plus the PasswordEncoder: we
-            // never compare passwords ourselves.
+            // never compare passwords ourselves. AppUserDetailsService is where
+            // the identifier is matched against the username AND the email.
             authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password));
+                    new UsernamePasswordAuthenticationToken(identifier, password));
         } catch (AuthenticationException ex) {
             // Deliberately vague: telling the caller which half was wrong would
             // let them find out which usernames exist.

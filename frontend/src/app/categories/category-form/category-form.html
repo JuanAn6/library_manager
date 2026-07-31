@@ -1,0 +1,61 @@
+<section class="category-form">
+  <!-- Same three-state pattern as the list: loading / error / content.
+       When creating there is nothing to load, so loading() is false from the
+       very first render and the form shows up straight away. -->
+  @if (loading()) {
+    <p>Loading category…</p>
+  } @else if (isNew() || category()) {
+    <h2>
+      @if (isNew()) {
+        New category
+      } @else {
+        Edit: {{ category()?.name }}
+      }
+    </h2>
+
+    <!-- [formGroup] connects this <form> to the "form" property of the class.
+         (ngSubmit) fires on submit (button click or Enter). We use it instead
+         of (click) so keyboard users get the same behaviour. -->
+    <form [formGroup]="form" (ngSubmit)="save()" class="main-form">
+      <!-- formControlName="name" links this input to the control named "name".
+           Two-way from then on: typing updates the control, patchValue updates
+           the input. -->
+      <label class="full">
+        <span>Name</span>
+        <input type="text" formControlName="name" autocomplete="off" />
+        <!-- Errors are shown only once the user touched the field, so a
+             pristine form does not open covered in red. -->
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          @if (form.controls.name.hasError('required')) {
+            <small class="field-error">Name is required.</small>
+          } @else if (form.controls.name.hasError('maxlength')) {
+            <small class="field-error">The name cannot be longer than 80 characters.</small>
+          }
+        }
+      </label>
+
+      <label class="full">
+        <span>Description</span>
+        <textarea rows="6" formControlName="description"></textarea>
+        @if (form.controls.description.touched && form.controls.description.hasError('maxlength')) {
+          <small class="field-error">The description cannot be longer than 500 characters.</small>
+        }
+      </label>
+
+      @if (error()) {
+        <p class="error full">{{ error() }}</p>
+      }
+
+      <div class="actions full">
+        <button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <a [routerLink]="cancelLink()">Cancel</a>
+      </div>
+    </form>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <p><a routerLink="/categories">← Back to the list</a></p>
+</section>

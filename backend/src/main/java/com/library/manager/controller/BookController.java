@@ -9,6 +9,7 @@ import com.library.manager.repository.BookRepository;
 import com.library.manager.repository.CategoryRepository;
 import com.library.manager.repository.PublisherRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -69,9 +70,14 @@ public class BookController {
     }
 
     // POST /api/books -> store()
+    // The body is copied field by field into a NEW entity: an id sent by the
+    // client would otherwise turn this "create" into an overwrite of whatever
+    // row already holds it.
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Book store(@RequestBody Book book) {
+    public Book store(@RequestBody Book request) {
+        Book book = new Book();
+        apply(request, book);
         return bookRepository.save(book);
     }
 
@@ -81,21 +87,65 @@ public class BookController {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
 
-        book.setTitle(bookDetails.getTitle());
-        book.setIsbn(bookDetails.getIsbn());
-        book.setAuthors(resolveAuthors(bookDetails.getAuthors()));
-        book.setCategory(resolveCategory(bookDetails.getCategory()));
-        book.setPublisher(resolvePublisher(bookDetails.getPublisher()));
-        book.setLanguage(bookDetails.getLanguage());
-        book.setPageCount(bookDetails.getPageCount());
-        book.setDescription(bookDetails.getDescription());
-        book.setCoverImageUrl(bookDetails.getCoverImageUrl());
-        book.setPublishedDate(bookDetails.getPublishedDate());
-        book.setTotalCopies(bookDetails.getTotalCopies());
-        book.setAvailableCopies(bookDetails.getAvailableCopies());
-        book.setLocation(bookDetails.getLocation());
-
+        apply(bookDetails, book);
         return bookRepository.save(book);
+    }
+
+    /**
+     * Validates the incoming values and copies them onto the target entity.
+     *
+     * <p>Shared by store() and update() on purpose: a book must not be able to
+     * be edited into a state that creating it would have rejected.
+     */
+    private void apply(Book request, Book target) {
+        String title = request.getTitle() == null ? "" : request.getTitle().trim();
+        if (title.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
+        }
+
+        // Blank is stored as null, so "no ISBN" has a single representation.
+        // That matters here more than elsewhere: the column is UNIQUE, and two
+        // empty strings would clash while two nulls do not.
+        String isbn = request.getIsbn() == null || request.getIsbn().isBlank()
+                ? null
+                : request.getIsbn().trim();
+
+        // Only a clash with a DIFFERENT book is a conflict: keeping its own ISBN
+        // is not a change at all. Checked here so it comes back as a worded 409
+        // instead of a constraint violation turning into a 500.
+        if (isbn != null) {
+            bookRepository.findByIsbn(isbn).ifPresent(other -> {
+                if (!other.getId().equals(target.getId())) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "That ISBN is already registered");
+                }
+            });
+        }
+
+        if (request.getTotalCopies() < 0 || request.getAvailableCopies() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The number of copies cannot be negative");
+        }
+        // The available ones are a subset of the ones the library owns, so the
+        // stock would be telling us a lending had produced copies.
+        if (request.getAvailableCopies() > request.getTotalCopies()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "There cannot be more available copies than total copies");
+        }
+
+        target.setTitle(title);
+        target.setIsbn(isbn);
+        target.setAuthors(resolveAuthors(request.getAuthors()));
+        target.setCategory(resolveCategory(request.getCategory()));
+        target.setPublisher(resolvePublisher(request.getPublisher()));
+        target.setLanguage(request.getLanguage());
+        target.setPageCount(request.getPageCount());
+        target.setDescription(request.getDescription());
+        target.setCoverImageUrl(request.getCoverImageUrl());
+        target.setPublishedDate(request.getPublishedDate());
+        target.setTotalCopies(request.getTotalCopies());
+        target.setAvailableCopies(request.getAvailableCopies());
+        target.setLocation(request.getLocation());
+        // "available" is not copied on purpose: the entity keeps it in step with
+        // the available copies on its own (see Book.syncAvailability).
     }
 
     // The client only picks authors from a dropdown, so the payload is trusted
@@ -147,5 +197,18 @@ public class BookController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
         }
         bookRepository.deleteById(id);
+    }
+
+    public record ErrorResponse(String message) {}
+
+    /**
+     * Puts the reason of a rejected request into the response body, the same way
+     * UserController does: Spring's default error page drops it unless
+     * server.error.include-message is turned on, and that setting would apply to
+     * every endpoint, including the messages of unexpected exceptions.
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleRejected(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(new ErrorResponse(ex.getReason()));
     }
 }

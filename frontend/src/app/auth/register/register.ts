@@ -33,6 +33,9 @@ export class Register {
   protected readonly form = this.fb.nonNullable.group(
     {
       username: ['', [Validators.required, Validators.minLength(3)]],
+      // Validators.email is permissive on purpose, like the backend's check:
+      // only sending a message proves an address exists.
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmation: ['', Validators.required],
     },
@@ -48,9 +51,9 @@ export class Register {
     this.submitting.set(true);
     this.error.set(null);
 
-    const { username, password } = this.form.getRawValue();
+    const { username, email, password } = this.form.getRawValue();
 
-    this.auth.register({ username, password }).subscribe({
+    this.auth.register({ username, email, password }).subscribe({
       // The backend signs the new account in, so there is no login step here
       next: () => this.router.navigateByUrl('/books'),
       error: (err: HttpErrorResponse) => {
@@ -62,10 +65,12 @@ export class Register {
 
   private messageFor(status: number): string {
     switch (status) {
+      // The backend does not say WHICH of the two clashed, so neither do we:
+      // naming it would confirm to a stranger that an account uses that email.
       case 409:
-        return 'That username is already taken.';
+        return 'That username or email is already registered.';
       case 400:
-        return 'Username needs 3 characters and password needs 8.';
+        return 'Username needs 3 characters, password needs 8, and the email must be valid.';
       default:
         return 'Could not create the account. Please try again.';
     }

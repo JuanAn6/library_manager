@@ -12,8 +12,18 @@ export interface AuthUser {
   role: RoleName;
 }
 
+// What the sign-in form sends. "identifier" rather than "username" because the
+// backend accepts either the username or the email address.
 export interface Credentials {
+  identifier: string;
+  password: string;
+}
+
+// Registering asks for more than signing in does: the email is mandatory and
+// cannot be derived from anything else.
+export interface Registration {
   username: string;
+  email: string;
   password: string;
 }
 
@@ -43,9 +53,9 @@ export class AuthService {
 
   // The backend signs the new account in straight away, so the response is the
   // same as a login and we can treat it the same way.
-  register(credentials: Credentials): Observable<AuthUser> {
+  register(registration: Registration): Observable<AuthUser> {
     return this.http
-      .post<AuthUser>(`${this.apiUrl}/register`, credentials)
+      .post<AuthUser>(`${this.apiUrl}/register`, registration)
       .pipe(tap((user) => this.currentUser.set(user)));
   }
 

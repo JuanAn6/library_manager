@@ -21,6 +21,10 @@ INSERT INTO roles (name, created_at, updated_at) VALUES
 CREATE TABLE users (
     id            BIGINT       NOT NULL AUTO_INCREMENT,
     username      VARCHAR(80)  NOT NULL,
+    -- Mandatory, and unique like the username: signing in accepts either one,
+    -- so both have to identify a single account. Stored lowercased, see
+    -- AuthController.
+    email         VARCHAR(180) NOT NULL,
     -- BCrypt hashes are 60 characters, plus the "{bcrypt}" prefix the
     -- delegating encoder writes. 100 leaves room to migrate algorithms later.
     password_hash VARCHAR(100) NOT NULL,
@@ -29,5 +33,6 @@ CREATE TABLE users (
     created_at    DATETIME(6),
     PRIMARY KEY (id),
     CONSTRAINT uk_users_username UNIQUE (username),
+    CONSTRAINT uk_users_email UNIQUE (email),
     CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles (id)
 ) ENGINE = InnoDB;

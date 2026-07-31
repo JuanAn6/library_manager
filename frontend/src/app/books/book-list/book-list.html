@@ -1,5 +1,29 @@
 <section class="books">
-  <h2>Books</h2>
+  <header class="heading">
+    <h2>Books</h2>
+
+    <!-- Hidden for a MEMBER, whose role only allows reading. This is
+         cosmetic: the backend answers 403 to the request either way. -->
+    @if (canEdit()) {
+      <a routerLink="/books/new">New book</a>
+    }
+  </header>
+
+  <!-- The backend does the filtering (GET /api/books?title=…), so this is a
+       form and not a live filter over the array we already have: only what the
+       server returns is guaranteed to be the whole match. -->
+  <!-- Plain (submit), not (ngSubmit): this form has no Angular directive on it,
+       so we stop the browser reloading the page ourselves. -->
+  <form class="search" (submit)="$event.preventDefault(); onSearch(term.value)">
+    <label>
+      <span class="visually-hidden">Search by title</span>
+      <input #term type="search" [value]="search()" placeholder="Search by title…" />
+    </label>
+    <button type="submit">Search</button>
+    @if (search()) {
+      <button type="button" (click)="term.value = ''; clearSearch()">Clear</button>
+    }
+  </form>
 
   <!-- @if / @else is Angular's control flow: shows one block at a time -->
   @if (loading()) {
@@ -43,7 +67,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="4">No books found.</td>
+            <td colspan="5">No books found.</td>
           </tr>
         }
       </tbody>

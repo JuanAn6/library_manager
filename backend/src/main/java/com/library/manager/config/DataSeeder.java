@@ -26,6 +26,7 @@ public class DataSeeder implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final String adminUsername;
+    private final String adminEmail;
     private final String adminPassword;
 
     public DataSeeder(BookRepository bookRepository,
@@ -38,6 +39,7 @@ public class DataSeeder implements CommandLineRunner {
                       RoleRepository roleRepository,
                       PasswordEncoder passwordEncoder,
                       @Value("${app.seed.admin.username}") String adminUsername,
+                      @Value("${app.seed.admin.email}") String adminEmail,
                       @Value("${app.seed.admin.password}") String adminPassword) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
@@ -49,6 +51,7 @@ public class DataSeeder implements CommandLineRunner {
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminUsername = adminUsername;
+        this.adminEmail = adminEmail;
         this.adminPassword = adminPassword;
     }
 
@@ -64,7 +67,7 @@ public class DataSeeder implements CommandLineRunner {
         // The password is hashed here and only the hash is stored. This is a
         // dev-profile convenience; on any real deployment accounts are created
         // through /api/auth/register.
-        userRepository.save(new User(adminUsername, passwordEncoder.encode(adminPassword), adminRole));
+        userRepository.save(new User(adminUsername, adminEmail, passwordEncoder.encode(adminPassword), adminRole));
         System.out.printf("Seeder created the '%s' user%n", adminUsername);
     }
 

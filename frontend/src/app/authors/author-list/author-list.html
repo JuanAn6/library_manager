@@ -1,0 +1,74 @@
+<section class="authors">
+  <header class="heading">
+    <h2>Authors</h2>
+
+    <!-- Hidden for a MEMBER, whose role only allows reading. This is
+         cosmetic: the backend answers 403 to the request either way. -->
+    @if (canEdit()) {
+      <a routerLink="/authors/new">New author</a>
+    }
+  </header>
+
+  <!-- The backend does the filtering (GET /api/authors?lastName=…), so this is
+       a form and not a live filter over the array we already have: only what
+       the server returns is guaranteed to be the whole match. -->
+  <!-- Plain (submit), not (ngSubmit): this form has no Angular directive on it,
+       so we stop the browser reloading the page ourselves. -->
+  <form class="search" (submit)="$event.preventDefault(); onSearch(term.value)">
+    <label>
+      <span class="visually-hidden">Search by last name</span>
+      <input #term type="search" [value]="search()" placeholder="Search by last name…" />
+    </label>
+    <button type="submit">Search</button>
+    @if (search()) {
+      <button type="button" (click)="term.value = ''; clearSearch()">Clear</button>
+    }
+  </form>
+
+  <!-- @if / @else is Angular's control flow: shows one block at a time -->
+  @if (loading()) {
+    <p>Loading authors…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <p>Total authors: <strong>{{ authors().length }}</strong></p>
+
+    <!-- @for repeats the <tr> once per author. "track author.id" helps Angular
+         know which item is which (needed for good performance). -->
+    <table>
+      <thead>
+        <tr>
+          <th>Last name</th>
+          <th>First name</th>
+          <th>Nationality</th>
+          <th>Birth date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (author of authors(); track author.id) {
+          <tr>
+            <td>
+              <!-- routerLink navigates without reloading the page. The array
+                   ['/authors', author.id] builds the url /authors/7 -->
+              <a [routerLink]="['/authors', author.id]">{{ author.lastName }}</a>
+            </td>
+            <td>{{ author.firstName }}</td>
+            <td>{{ author.nationality || '—' }}</td>
+            <td>{{ author.birthDate || '—' }}</td>
+            <td>
+              @if (canEdit()) {
+                <a [routerLink]="['/authors/edit', author.id]">Edit</a>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">No authors found.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

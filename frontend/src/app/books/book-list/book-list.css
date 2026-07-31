@@ -2,6 +2,47 @@
   margin-top: 2rem;
 }
 
+/* Title on the left, the "New book" link on the right */
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.search input {
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.search button {
+  padding: 5px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Hides the label visually but keeps it for screen readers, which is what the
+   placeholder alone would not do. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .books ul {
   padding-left: 1.25rem;
   line-height: 1.7;

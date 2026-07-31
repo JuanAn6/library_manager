@@ -1,0 +1,95 @@
+<section class="user-form">
+  <!-- Same three-state pattern as the list: loading / error / content.
+       When creating there is no account to fetch, but the roles still are, so
+       loading() covers that wait too. -->
+  @if (loading()) {
+    <p>Loading user…</p>
+  } @else if (isNew() || user()) {
+    <h2>
+      @if (isNew()) {
+        New user
+      } @else {
+        Edit: {{ user()?.username }}
+      }
+    </h2>
+
+    <!-- [formGroup] connects this <form> to the "form" property of the class.
+         (ngSubmit) fires on submit (button click or Enter). We use it instead
+         of (click) so keyboard users get the same behaviour. -->
+    <form [formGroup]="form" (ngSubmit)="save()" class="main-form">
+      <!-- formControlName="username" links this input to the control named
+           "username". Two-way from then on: typing updates the control,
+           patchValue updates the input. -->
+      <label>
+        <span>Username</span>
+        <input type="text" formControlName="username" autocomplete="off" />
+        <!-- Errors are shown only once the user touched the field, so a
+             pristine form does not open covered in red. -->
+        @if (form.controls.username.touched && form.controls.username.invalid) {
+          <small class="field-error">Username must be at least 3 characters long.</small>
+        }
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input type="email" formControlName="email" autocomplete="off" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small class="field-error">A valid email address is required.</small>
+        }
+      </label>
+
+      <!-- Only when creating: an existing account keeps the password it has,
+           and resetting somebody's password is a separate operation, not a side
+           effect of saving this form. -->
+      @if (isNew()) {
+        <label class="full">
+          <span>Password</span>
+          <input type="password" formControlName="password" autocomplete="new-password" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <small class="field-error">Password must be at least 8 characters long.</small>
+          }
+          <small class="hint">The account signs in with this password. Share it with its owner.</small>
+        </label>
+      }
+
+      <!-- The role is a relation to another entity, so the dropdown is fed by
+           /api/roles. Single choice: a user holds exactly one role, and it is
+           never empty, so there is no "—" option here. -->
+      <label>
+        <span>Role</span>
+        <select formControlName="role">
+          @for (role of roles(); track role.id) {
+            <option [value]="role.name">{{ role.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="checkbox full">
+        <input type="checkbox" formControlName="enabled" />
+        <span>Enabled</span>
+      </label>
+
+      @if (isSelf()) {
+        <p class="hint full">
+          This is your own account: the role and the status are locked, so you
+          cannot lock yourself out of this screen.
+        </p>
+      }
+
+      @if (error()) {
+        <p class="error full">{{ error() }}</p>
+      }
+
+      <div class="actions full">
+        <button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <a [routerLink]="cancelLink()">Cancel</a>
+      </div>
+    </form>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <p><a routerLink="/users">← Back to the list</a></p>
+</section>

@@ -1,0 +1,27 @@
+/* Styles here are SCOPED: they only apply to this component's template. */
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 20px 0;
+}
+
+dt {
+  font-weight: 600;
+  /* opacity instead of a fixed grey, so it stays readable in light AND dark mode */
+  opacity: 0.7;
+}
+
+dd {
+  margin: 0;
+}
+
+/* The description is free text and can be long, so it gets room to breathe */
+.description {
+  max-width: 70ch;
+  white-space: pre-wrap;
+}
+
+.error {
+  color: #b00020;
+}

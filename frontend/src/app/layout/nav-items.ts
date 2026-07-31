@@ -24,5 +24,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Books', path: '/books', icon: '📚' },
+  { label: 'Authors', path: '/authors', icon: '✍️' },
+  { label: 'Categories', path: '/categories', icon: '🏷️' },
   { label: 'Users', path: '/users', icon: '👥', roles: ['ADMIN'] },
 ];

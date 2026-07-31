@@ -1,0 +1,82 @@
+.categories {
+  margin-top: 2rem;
+}
+
+/* Title on the left, the "New category" link on the right */
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.search input {
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.search button {
+  padding: 5px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Hides the label visually but keeps it for screen readers, which is what the
+   placeholder alone would not do. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+/* Same table look as the authors list. It lives here, in the component's own
+   stylesheet, so it stays scoped to this component. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  padding: 5px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* A description can run long. Capping the column keeps the name and the
+   actions where the eye expects them instead of pushed off to the sides. */
+td:nth-child(2) {
+  max-width: 60ch;
+}

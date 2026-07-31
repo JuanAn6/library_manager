@@ -1,4 +1,80 @@
 <section class="users">
-  <h2>Users</h2>
-  <p>User management is not implemented yet.</p>
+  <header class="heading">
+    <h2>Users</h2>
+
+    <!-- No role check around this link: only an ADMIN can reach the whole
+         section, so there is nobody here who cannot create an account. -->
+    <a routerLink="/users/new">New user</a>
+  </header>
+
+  <!-- The backend does the filtering (GET /api/users?search=…), so this is a
+       form and not a live filter over the array we already have: only what the
+       server returns is guaranteed to be the whole match. -->
+  <!-- Plain (submit), not (ngSubmit): this form has no Angular directive on it,
+       so we stop the browser reloading the page ourselves. -->
+  <form class="search" (submit)="$event.preventDefault(); onSearch(term.value)">
+    <label>
+      <span class="visually-hidden">Search by username or email</span>
+      <input #term type="search" [value]="search()" placeholder="Search by username or email…" />
+    </label>
+    <button type="submit">Search</button>
+    @if (search()) {
+      <button type="button" (click)="term.value = ''; clearSearch()">Clear</button>
+    }
+  </form>
+
+  <!-- @if / @else is Angular's control flow: shows one block at a time -->
+  @if (loading()) {
+    <p>Loading users…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <p>Total users: <strong>{{ users().length }}</strong></p>
+
+    <!-- @for repeats the <tr> once per user. "track user.id" helps Angular
+         know which item is which (needed for good performance). -->
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>
+              <!-- routerLink navigates without reloading the page. The array
+                   ['/users', user.id] builds the url /users/7 -->
+              <a [routerLink]="['/users', user.id]">{{ user.username }}</a>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+              <!-- The backend can disable an account without deleting it -->
+              <span class="status" [class.disabled]="!user.enabled">
+                {{ user.enabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </td>
+            <!-- The "date" pipe formats the ISO text the API sends -->
+            <td>{{ user.createdAt | date: 'yyyy-MM-dd' }}</td>
+            <td>
+              <!-- No role check around this link: only an ADMIN can reach the
+                   whole section, so there is nobody here who cannot edit. -->
+              <a [routerLink]="['/users/edit', user.id]">Edit</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">No users found.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
 </section>

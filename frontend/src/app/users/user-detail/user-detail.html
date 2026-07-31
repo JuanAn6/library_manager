@@ -1,0 +1,35 @@
+<section class="user-detail">
+  <!-- Same three-state pattern as the list: loading / error / content -->
+  @if (loading()) {
+    <p>Loading user…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (user(); as u) {
+    <!-- "as u" stores the signal value in a local variable, so we don't
+         have to call user() over and over (and TypeScript knows it is not null). -->
+    <h2>{{ u.username }}</h2>
+
+    <dl>
+      <dt>Email</dt>
+      <dd>{{ u.email }}</dd>
+
+      <dt>Role</dt>
+      <dd>{{ u.role }}</dd>
+
+      <dt>Status</dt>
+      <dd>
+        <span class="status" [class.disabled]="!u.enabled">
+          {{ u.enabled ? 'Enabled' : 'Disabled' }}
+        </span>
+      </dd>
+
+      <dt>Created</dt>
+      <dd>{{ (u.createdAt | date: 'yyyy-MM-dd HH:mm') || '—' }}</dd>
+    </dl>
+
+    <a [routerLink]="['/users/edit', u.id]">Edit</a>
+  }
+
+  <!-- routerLink also works for plain navigation, no parameters needed -->
+  <p><a routerLink="/users">← Back to the list</a></p>
+</section>

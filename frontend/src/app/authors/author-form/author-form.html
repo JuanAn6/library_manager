@@ -1,0 +1,74 @@
+<section class="author-form">
+  <!-- Same three-state pattern as the list: loading / error / content.
+       When creating there is nothing to load, so loading() is false from the
+       very first render and the form shows up straight away. -->
+  @if (loading()) {
+    <p>Loading author…</p>
+  } @else if (isNew() || author()) {
+    <h2>
+      @if (isNew()) {
+        New author
+      } @else {
+        Edit: {{ author()?.firstName }} {{ author()?.lastName }}
+      }
+    </h2>
+
+    <!-- [formGroup] connects this <form> to the "form" property of the class.
+         (ngSubmit) fires on submit (button click or Enter). We use it instead
+         of (click) so keyboard users get the same behaviour. -->
+    <form [formGroup]="form" (ngSubmit)="save()" class="main-form">
+      <!-- formControlName="firstName" links this input to the control named
+           "firstName". Two-way from then on: typing updates the control,
+           patchValue updates the input. -->
+      <label>
+        <span>First name</span>
+        <input type="text" formControlName="firstName" autocomplete="off" />
+        <!-- Errors are shown only once the user touched the field, so a
+             pristine form does not open covered in red. -->
+        @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
+          <small class="field-error">First name is required.</small>
+        }
+      </label>
+
+      <label>
+        <span>Last name</span>
+        <input type="text" formControlName="lastName" autocomplete="off" />
+        @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
+          <small class="field-error">Last name is required.</small>
+        }
+      </label>
+
+      <label>
+        <span>Nationality</span>
+        <input type="text" formControlName="nationality" autocomplete="off" />
+      </label>
+
+      <label>
+        <span>Birth date</span>
+        <!-- type="date" expects the exact "YYYY-MM-DD" format the API sends,
+             so the value maps across with no conversion. -->
+        <input type="date" formControlName="birthDate" />
+      </label>
+
+      <label class="full">
+        <span>Biography</span>
+        <textarea rows="6" formControlName="biography"></textarea>
+      </label>
+
+      @if (error()) {
+        <p class="error full">{{ error() }}</p>
+      }
+
+      <div class="actions full">
+        <button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <a [routerLink]="cancelLink()">Cancel</a>
+      </div>
+    </form>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <p><a routerLink="/authors">← Back to the list</a></p>
+</section>

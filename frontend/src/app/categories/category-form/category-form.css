@@ -1,0 +1,58 @@
+/* Styles here are SCOPED: they only apply to this component's template. */
+/* A single column, unlike the author form: a category is a name and a
+   description, and pairing them side by side would leave a stray gap. */
+form {
+  display: grid;
+  gap: 16px;
+  margin: 20px 0;
+  max-width: 800px;
+}
+
+/* Kept for symmetry with the other forms, so the markup reads the same */
+.full {
+  grid-column: 1 / -1;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+label > span {
+  font-weight: 600;
+}
+
+input,
+textarea {
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  /* A textarea is resizable by default and would otherwise break the grid */
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+button {
+  padding: 5px 20px;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.field-error,
+.error {
+  color: #e06c75;
+}

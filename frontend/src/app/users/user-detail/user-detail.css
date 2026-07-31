@@ -1,0 +1,30 @@
+/* Styles here are SCOPED: they only apply to this component's template. */
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 20px 0;
+}
+
+dt {
+  font-weight: 600;
+  /* opacity instead of a fixed grey, so it stays readable in light AND dark mode */
+  opacity: 0.7;
+}
+
+dd {
+  margin: 0;
+}
+
+.status {
+  font-weight: 600;
+  color: #15803d;
+}
+
+.status.disabled {
+  color: #b91c1c;
+}
+
+.error {
+  color: #b00020;
+}

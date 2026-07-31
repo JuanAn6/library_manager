@@ -1,0 +1,28 @@
+<section class="category-detail">
+  <!-- Same three-state pattern as the list: loading / error / content -->
+  @if (loading()) {
+    <p>Loading category…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (category(); as c) {
+    <!-- "as c" stores the signal value in a local variable, so we don't
+         have to call category() over and over (and TypeScript knows it is not null). -->
+    <h2>{{ c.name }}</h2>
+
+    <dl>
+      <dt>Name</dt>
+      <dd>{{ c.name }}</dd>
+    </dl>
+
+    @if (c.description) {
+      <p class="description">{{ c.description }}</p>
+    }
+
+    @if (canEdit()) {
+      <a [routerLink]="['/categories/edit', c.id]">Edit</a>
+    }
+  }
+
+  <!-- routerLink also works for plain navigation, no parameters needed -->
+  <p><a routerLink="/categories">← Back to the list</a></p>
+</section>

@@ -1,21 +1,30 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
 import { BookService } from '../book.service';
 import { AuthorService } from '../../authors/author.service';
 import { CategoryService } from '../../categories/category.service';
 import { PublisherService } from '../../publishers/publisher.service';
 import { Author, Book, Category, Publisher } from '../book';
 
+/**
+ * One component for both /books/new and /books/edit/:id.
+ *
+ * The two screens differ only in where the initial values come from and which
+ * request is sent on save, so splitting them would mean maintaining the same
+ * form twice. Which mode we are in is decided once, in ngOnInit, by whether the
+ * route carries an ":id".
+ */
 @Component({
-  selector: 'app-book-edit',
+  selector: 'app-book-form',
   // ReactiveFormsModule gives the template [formGroup] and formControlName
   imports: [RouterLink, ReactiveFormsModule],
-  templateUrl: './book-edit.html',
-  styleUrl: './book-edit.css',
+  templateUrl: './book-form.html',
+  styleUrl: './book-form.css',
 })
-export class BookEdit implements OnInit {
+export class BookForm implements OnInit {
   // Ask Angular for the shared BookService instance
   private readonly bookService = inject(BookService);
 
@@ -43,8 +52,20 @@ export class BookEdit implements OnInit {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  // The form STRUCTURE, declared up front and empty. The values arrive later,
-  // when the API responds (see patchValue in ngOnInit).
+  // Null while creating, the id of the row being edited otherwise. Everything
+  // the template needs to know about the mode is derived from it.
+  private readonly editedId = signal<number | null>(null);
+  protected readonly isNew = computed(() => this.editedId() === null);
+
+  // Where "Cancel" goes: the book's own page when there is one, the list when
+  // we are creating and there is nothing to go back to.
+  protected readonly cancelLink = computed(() => {
+    const id = this.editedId();
+    return id === null ? ['/books'] : ['/books', id];
+  });
+
+  // The form STRUCTURE, declared up front and empty. When editing, the values
+  // arrive later, once the API responds (see patchValue in ngOnInit).
   // "nonNullable" means a control resets to its initial value, never to null.
   // Each entry is [initialValue, validators].
   protected readonly form = this.fb.nonNullable.group({
@@ -54,8 +75,9 @@ export class BookEdit implements OnInit {
     language: [''],
     pageCount: [0, Validators.min(0)],
     location: [''],
-    totalCopies: [0, [Validators.required, Validators.min(0)]],
-    availableCopies: [0, [Validators.required, Validators.min(0)]],
+    // A new book starts with a single copy, which is the common case and keeps
+    // the form usable without touching this field.
+    totalCopies: [1, [Validators.required, Validators.min(0)]],
     description: [''],
     // The selects hold ids, not whole entities: an id is a stable, comparable
     // value, while two objects with the same data are never equal.
@@ -67,14 +89,18 @@ export class BookEdit implements OnInit {
   });
 
   ngOnInit(): void {
-    // snapshot = the value of the route at this exact moment.
-    // Params always arrive as text, so we convert it to a number.
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    // Params always arrive as text. On /books/new there is no "id" at all, and
+    // that absence is what puts us in create mode.
+    const param = this.route.snapshot.paramMap.get('id');
+    const id = param === null ? null : Number(param);
+    this.editedId.set(id);
 
     // forkJoin waits for ALL the requests and emits once, so every dropdown
-    // already has its options when we select the values of this book.
+    // already has its options when we select the values of this book. When
+    // creating there is no book to fetch, and of(null) fills that slot so the
+    // rest of this method needs no second version.
     forkJoin({
-      book: this.bookService.getBook(id),
+      book: id === null ? of(null) : this.bookService.getBook(id),
       authors: this.authorService.getAuthors(),
       categories: this.categoryService.getCategories(),
       publishers: this.publisherService.getPublishers(),
@@ -89,6 +115,10 @@ export class BookEdit implements OnInit {
         this.publishers.set([...publishers].sort((a, b) => a.name.localeCompare(b.name)));
         this.loading.set(false);
 
+        if (!book) {
+          return; // creating: the form keeps the empty values declared above
+        }
+
         // THIS is what populates the inputs. patchValue copies the values into
         // the controls that match by name and ignores anything else.
         // Optional fields can be undefined/null, and the controls are
@@ -101,7 +131,6 @@ export class BookEdit implements OnInit {
           pageCount: book.pageCount ?? 0,
           location: book.location ?? '',
           totalCopies: book.totalCopies,
-          availableCopies: book.availableCopies,
           description: book.description ?? '',
           authorIds: (book.authors ?? []).map((author) => author.id),
           categoryId: book.category?.id ?? null,
@@ -151,7 +180,7 @@ export class BookEdit implements OnInit {
 
     // Guard: never send an invalid form. markAllAsTouched makes the error
     // messages show up (they are hidden until a field has been touched).
-    if (!original || this.form.invalid) {
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -161,27 +190,45 @@ export class BookEdit implements OnInit {
     const { authorIds, categoryId, publisherId, ...values } = this.form.getRawValue();
 
     // The API's PUT replaces EVERY field, so we start from the original book
-    // and let the form values override the ones we edited.
-    const updated: Book = {
-      ...original,
+    // and let the form values override the ones we edited. On a create there is
+    // no original, and the fields the backend fills in itself (id, timestamps)
+    // are simply absent.
+    const payload = {
+      ...(original ?? {}),
       ...values,
+      // Available copies follow lending, not this form: an existing book keeps
+      // the count it has, and a brand new one has every copy on the shelf.
+      availableCopies: original ? original.availableCopies : values.totalCopies,
       authors: this.selectedAuthors(),
       category: this.selectedCategory(),
       publisher: this.selectedPublisher(),
-    };
+    } as Book;
 
     this.saving.set(true);
     this.error.set(null);
 
-    this.bookService.updateBook(original.id, updated).subscribe({
-      next: () => {
+    const request = original
+      ? this.bookService.updateBook(original.id, payload)
+      : this.bookService.createBook(payload);
+
+    request.subscribe({
+      next: (saved) => {
         this.saving.set(false);
-        // Back to the detail page of the book we just saved
-        this.router.navigate(['/books', original.id]);
+        // Straight to the detail page of the book we just saved. On a create
+        // the id only exists in the response, which is why we use "saved".
+        this.router.navigate(['/books', saved.id]);
       },
-      error: (err) => {
-        this.error.set("Something went wrong. Can't save book.");
+      error: (err: HttpErrorResponse) => {
         this.saving.set(false);
+        // 400 and 409 are the backend rejecting the data, and its message says
+        // exactly why, so it is worth showing. Anything else is a problem on
+        // our side and gets the generic wording.
+        const message = err.error?.message;
+        this.error.set(
+          (err.status === 400 || err.status === 409) && message
+            ? message
+            : "Something went wrong. Can't save book.",
+        );
         console.error(err);
       },
     });

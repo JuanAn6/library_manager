@@ -1,9 +1,17 @@
-<section class="book-edit">
-  <!-- Same three-state pattern as the list: loading / error / content -->
+<section class="book-form">
+  <!-- Same three-state pattern as the list: loading / error / content.
+       When creating there is no book to fetch, but the dropdowns still are, so
+       loading() covers that wait too. -->
   @if (loading()) {
     <p>Loading book…</p>
-  } @else if (book(); as b) {
-    <h2>Edit: {{ b.title }}</h2>
+  } @else if (isNew() || book()) {
+    <h2>
+      @if (isNew()) {
+        New book
+      } @else {
+        Edit: {{ book()?.title }}
+      }
+    </h2>
 
     <!-- [formGroup] connects this <form> to the "form" property of the class.
          (ngSubmit) fires on submit (button click or Enter). We use it instead
@@ -54,10 +62,15 @@
         <input type="number" min="0" formControlName="totalCopies" />
       </label>
 
+      <!-- Available copies are not editable: lending and returning are what
+           move that number. A new book simply starts with all of them free. -->
       <label>
         <span>Available copies</span>
-        <span>{{b.availableCopies}}</span>
-        <!-- <input type="number" min="0" formControlName="availableCopies" /> -->
+        @if (book(); as b) {
+          <span>{{ b.availableCopies }}</span>
+        } @else {
+          <span class="hint">All copies, until the first one is lent.</span>
+        }
       </label>
 
       <label class="full">
@@ -117,7 +130,7 @@
         <button type="submit" [disabled]="saving()">
           {{ saving() ? 'Saving…' : 'Save' }}
         </button>
-        <a [routerLink]="['/books', b.id]">Cancel</a>
+        <a [routerLink]="cancelLink()">Cancel</a>
       </div>
     </form>
   } @else if (error()) {

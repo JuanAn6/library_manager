@@ -3,10 +3,12 @@
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
     <label>
-      <span>Username</span>
-      <input type="text" formControlName="username" autocomplete="username" />
-      @if (form.controls.username.touched && form.controls.username.invalid) {
-        <small class="field-error">Username is required.</small>
+      <span>Username or email</span>
+      <!-- type="text", not type="email": either one is accepted here, and the
+           email keyboard validation would reject a plain username. -->
+      <input type="text" formControlName="identifier" autocomplete="username" />
+      @if (form.controls.identifier.touched && form.controls.identifier.invalid) {
+        <small class="field-error">Your username or email is required.</small>
       }
     </label>
 

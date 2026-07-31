@@ -19,8 +19,10 @@ export class Login {
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  // One field for two things: whatever is typed here is matched against both
+  // the username and the email, so there is nothing for the user to choose.
   protected readonly form = this.fb.nonNullable.group({
-    username: ['', Validators.required],
+    identifier: ['', Validators.required],
     password: ['', Validators.required],
   });
 
@@ -45,7 +47,7 @@ export class Login {
         // problem on our side, and saying so avoids blaming the user for it.
         this.error.set(
           err.status === 401
-            ? 'Wrong username or password.'
+            ? 'Wrong credentials. Check your username or email and your password.'
             : 'Could not sign you in. Please try again.',
         );
       },
