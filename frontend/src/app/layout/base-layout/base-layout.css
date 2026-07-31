@@ -1,0 +1,186 @@
+:host {
+  --sidebar-width: 240px;
+  display: block;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #1f2933;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.25rem 1rem;
+  background: #111827;
+  color: #e5e7eb;
+  position: sticky;
+  top: 0;
+  bottom: 0;
+  
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.98rem;
+}
+
+.nav-link:hover {
+  background: #1f2937;
+  color: #fff;
+}
+
+.nav-link.active {
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #1f2937;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.session {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.5rem;
+}
+
+.session .username {
+  font-weight: 600;
+}
+
+.session .role {
+  font-size: 0.75rem;
+  color: #9aa5b1;
+  letter-spacing: 0.04em;
+}
+
+.logout {
+  background: transparent;
+  border: 1px solid #374151;
+  color: #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.logout:hover {
+  background: #1f2937;
+}
+
+/* ---------- Content ---------- */
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e4e9f0;
+}
+
+.topbar-title {
+  font-weight: 600;
+}
+
+.menu-toggle {
+  background: transparent;
+  border: 1px solid #e4e9f0;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+.footer {
+  text-align: center;
+  padding: 1rem;
+  color: #9aa5b1;
+}
+
+.backdrop {
+  display: none;
+}
+
+/* ---------- Small screens: the sidebar slides in ---------- */
+
+@media (max-width: 768px) {
+  .topbar {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .menu-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .menu-open .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: rgba(17, 24, 39, 0.5);
+  }
+}

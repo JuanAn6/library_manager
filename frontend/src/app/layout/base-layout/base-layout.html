@@ -1,0 +1,55 @@
+<div class="layout" [class.menu-open]="menuOpen()">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">📚</span>
+      <span class="brand-name">{{ title }}</span>
+    </div>
+
+    <nav class="nav">
+      <!-- One link per entry of NAV_ITEMS. routerLinkActive adds the "active"
+           class to whichever link matches the current URL. -->
+      @for (item of navItems(); track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          (click)="closeMenu()"
+        >
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    @if (user(); as currentUser) {
+      <div class="sidebar-footer">
+        <div class="session">
+          <span class="username">{{ currentUser.username }}</span>
+          <span class="role">{{ currentUser.role }}</span>
+        </div>
+        <button type="button" class="logout" (click)="logout()">Sign out</button>
+      </div>
+    }
+  </aside>
+
+  <!-- Only visible while the menu is open on small screens: tapping it closes -->
+  <div class="backdrop" (click)="closeMenu()"></div>
+
+  <div class="content">
+    <header class="topbar">
+      <button type="button" class="menu-toggle" (click)="toggleMenu()" aria-label="Toggle menu">
+        ☰
+      </button>
+      <span class="topbar-title">{{ title }}</span>
+    </header>
+
+    <main class="page">
+      <!-- The child route of BaseLayout is rendered here -->
+      <router-outlet></router-outlet>
+    </main>
+
+    <footer class="footer">
+      <small>{{ title }} — {{ year }}</small>
+    </footer>
+  </div>
+</div>
